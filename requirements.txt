@@ -5,6 +5,7 @@ google-generativeai
 pytube
 nltk
 whisper
+gunicorn
 moviepy==1.0.3
 numpy>=1.18.1 
 imageio>=2.5.0 
