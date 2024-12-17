@@ -1,0 +1,16 @@
+# Core Python dependencies
+flask
+youtube_transcript_api
+google-generativeai
+pytube
+nltk
+whisper
+moviepy
+yt_dlp
+
+# Machine Learning and AI dependencies
+torch
+setuptools-rust
+
+# Additional dependencies for text processing
+google.generativeai
