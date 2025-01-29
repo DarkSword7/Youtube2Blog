@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register - Videa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      // Configure Tailwind dark mode
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {},
+        },
+      };
+
+      // Check initial dark mode preference
+      if (
+        localStorage.theme === "dark" ||
+        (!("theme" in localStorage) &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches)
+      ) {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    </script>
+    <style>
+      /* Glass morphism */
+      .glass {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+      .dark .glass {
+        background: rgba(4, 4, 4, 0.4);
+        border-color: rgba(255, 255, 255, 0.1);
+      }
+      /* Input styles */
+      .form-input {
+        background: rgba(255, 255, 255, 0.9) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #1f2937;
+      }
+      .dark .form-input {
+        background: rgba(17, 24, 39, 0.7) !important;
+        border-color: rgba(255, 255, 255, 0.1);
+        color: #e5e7eb;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-[#040404] dark:to-[#040404] min-h-screen flex items-center justify-center font-sans"
+  >
+    <div class="w-full max-w-md p-6">
+      <div class="glass shadow-lg rounded-2xl overflow-hidden backdrop-blur-md">
+        <div class="flex justify-center mt-8">
+          {% include 'components/logo.html' %}
+        </div>
+        <div class="p-6">
+          <h2
+            class="text-3xl font-bold text-center mb-8 bg-clip-text text-transparent bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"
+          >
+            Create Account
+          </h2>
+          <form id="registerForm" class="space-y-4">
+            <div>
+              <label
+                for="username"
+                class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300"
+              >
+                Username
+              </label>
+              <input
+                type="text"
+                id="username"
+                name="username"
+                required
+                class="w-full p-3 rounded-lg form-input focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label
+                for="email"
+                class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300"
+              >
+                Email
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                required
+                class="w-full p-3 rounded-lg form-input focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label
+                for="password"
+                class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300"
+              >
+                Password
+              </label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                required
+                class="w-full p-3 rounded-lg form-input focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <button
+              type="submit"
+              class="w-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:opacity-90 text-white font-semibold py-3 px-4 rounded-lg transition duration-200"
+            >
+              Register
+            </button>
+          </form>
+          <p class="mt-6 text-center text-gray-600 dark:text-gray-400">
+            Already have an account?
+            <a
+              href="{{ url_for('login') }}"
+              class="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 font-semibold hover:opacity-80"
+            >
+              Login here
+            </a>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document
+        .getElementById("registerForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const formData = new FormData(e.target);
+
+          try {
+            const response = await fetch("/register", {
+              method: "POST",
+              body: formData,
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+              window.location.href = "/";
+            } else {
+              alert(data.error);
+            }
+          } catch (error) {
+            console.error("Error:", error);
+            alert("An error occurred during registration");
+          }
+        });
+    </script>
+  </body>
+</html>

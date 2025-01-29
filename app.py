@@ -6,11 +6,18 @@ import whisper
 import tempfile
 import pytube
 import yt_dlp
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect, url_for
 from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, NoTranscriptFound
 from urllib.parse import urlparse, parse_qs
-import google.generativeai as genai
+from groq import Groq
 import moviepy.editor as mp
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime
+import json
+import requests
+import time
 
 # Suppress pytube warnings
 warnings.filterwarnings('ignore')
@@ -18,17 +25,29 @@ warnings.filterwarnings('ignore')
 # Ensure necessary downloads
 nltk.download('punkt', quiet=True)
 
-# Configure Google Gemini API
-GOOGLE_API_KEY = "AIzaSyCC_58lj4F6wwEDEC6H4B2ppYNTylc36LE"  # Replace with your actual API key
-if not GOOGLE_API_KEY:
-    raise ValueError("Please set the GOOGLE_API_KEY environment variable")
-
-genai.configure(api_key=GOOGLE_API_KEY)
-
 # Load Whisper model (select model size based on your system capabilities)
 # Options: 'tiny', 'base', 'small', 'medium', 'large'
 # Smaller models are faster but less accurate
 WHISPER_MODEL = 'small'  # Adjust based on your computational resources
+
+# Configure Groq client
+GROQ_API_KEY = "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"
+client = Groq(api_key=GROQ_API_KEY)
+
+# Add a test function to verify API connection
+def test_api_connection():
+    try:
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": "Hello!"}
+            ],
+        )
+        return True
+    except Exception as e:
+        print(f"API test failed: {str(e)}")
+        return False
 
 class YouTubeToBlogConverter:
     def __init__(self, video_url, target_language='en'):
@@ -201,7 +220,7 @@ class YouTubeToBlogConverter:
 
     def generate_blog_with_ai(self):
         """
-        Generate a blog post using Google Gemini AI.
+        Generate a blog post using Groq's Llama 3.3 70B model.
         Ensures the response is validated and structured correctly.
         """
         print("Attempting to fetch transcript...")
@@ -218,86 +237,172 @@ class YouTubeToBlogConverter:
         if not transcript:
             return {"error": "Could not generate transcript for this video."}
 
-        # Prepare input for Gemini AI
-        input_text = f"""
-        You are an expert blog post writer.
-
-        Video Details:
-        - Title: {video_details.get('title', 'Unknown Title')}
-        - Description: {video_details.get('description', 'No description available')}
-        - Author: {video_details.get('author', 'Unknown Creator')}
-        - Length: {video_details.get('length', 'Unknown')} seconds
-        - Views: {video_details.get('views', 'Not available')}
-
-        Transcript Content:
-        {transcript}
-
-        Task:
-        Based on the video details and transcript, write a detailed and well-structured blog post. The blog post should include:
-        1. A captivating title (without any hashtags or unnecessary formatting).
-        2. A compelling introduction that introduces the topic.
-        3. Organized main content with clear headings, bullet points, and insights.
-        4. A thoughtful conclusion that summarizes key points and adds value.
-
-        **Output the blog in plain text format without any markdown, extra hashtags, or formatting issues.**
-        """
-        # Use Gemini AI to generate the blog post
-        model = genai.GenerativeModel('gemini-pro')
         try:
-            response = model.generate_content(input_text)
-            
-            # Debugging: Log the raw response from AI
-            print("AI Raw Response:", response.text)
+            # Test API connection first
+            if not test_api_connection():
+                raise ValueError("Failed to connect to the API. Please check your API key and connection.")
 
-            # Validate AI response
-            if not response.text.strip() or "Introduction" in response.text and "Main Content" in response.text:
-                raise ValueError("AI response is incomplete or contains placeholders.")
+            print("Making direct API request...")
+            prompt = f"""Create a blog post about this video:
+            Video Information:
+            - Title: {video_details.get('title', 'Unknown Title')}
+            - Author: {video_details.get('author', 'Unknown Creator')}
             
+            Instructions:
+            1. Create a CONCISE title (maximum 60 characters) that captures the main topic
+            2. Title should be clear, engaging, and straight to the point
+            3. Avoid questions in the title
+            4. Don't include "Introduction" or similar prefix words
+            
+            Transcript Summary:
+            {transcript[:2000]}...
+            
+            Format as a markdown blog post with:
+            1. The concise title as a single H1 heading
+            2. Well-organized sections with H2 headings
+            3. Clear and engaging content
+            4. Proper markdown formatting"""
+
+            response = client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": """You are an expert blog writer who specializes in creating engaging content with concise, impactful titles.
+                        Key rules for titles:
+                        - Keep titles under 60 characters
+                        - Be specific and direct
+                        - Avoid questions or vague statements
+                        - Focus on the main value or insight
+                        - Don't use unnecessary prefixes like 'Introduction to' or 'Guide to'"""
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+                temperature=0.7,
+            )
+
+            if not response:
+                raise ValueError("No response received from API")
+
+            print("API Response received")
+            print("Response type:", type(response))
+            print("Response attributes:", dir(response))
+
+            if not hasattr(response, 'choices'):
+                raise ValueError("Invalid response format from API")
+
+            response_text = response.choices[0].message.content
+            print("Generated content:", response_text[:200] + "...")
+
             # Clean and parse blog post content
-            blog_post = self._clean_and_format_blog_post(response.text)
+            blog_post = self._clean_and_format_blog_post(response_text)
+            
+            if not blog_post.get("title") or not blog_post.get("content"):
+                raise ValueError("Generated blog post is missing title or content")
 
             return blog_post
+
         except Exception as e:
-            return {"error": f"AI generation failed: {str(e)}"}
+            error_msg = f"Error generating blog post: {str(e)}"
+            print(error_msg)
+            print("Full error details:", e)
+            print("Response received:", locals().get('response', 'No response'))
+            return {"error": error_msg}
 
     def _clean_and_format_blog_post(self, blog_post):
         """
-        Clean and format the AI-generated blog post:
-        - Remove redundant introductions/conclusions
-        - Remove hashtags from headings
-        - Improve formatting
-        
-        :param blog_post: Raw AI-generated blog content
-        :return: Formatted blog content as a dictionary
+        Clean and format the AI-generated blog post
         """
-        import re
+        try:
+            import re
 
-        # Split blog into sections
-        sections = re.split(r'\n\n+', blog_post)
-        clean_sections = []
-        seen_titles = set()
+            # Split blog into sections
+            sections = re.split(r'\n\n+', blog_post)
+            clean_sections = []
+            seen_titles = set()
 
-        for section in sections:
-            # Remove headings with hashtags (## Heading -> Heading)
-            section = re.sub(r'^\s*#+\s*', '', section.strip())
+            # Ensure we have content to process
+            if not sections:
+                raise ValueError("No content sections found in AI response")
 
-            # Remove duplicate titles (e.g., repeated "Introduction", "Conclusion")
-            if section in seen_titles:
-                continue
-            seen_titles.add(section)
+            for section in sections:
+                # Remove headings with hashtags (## Heading -> Heading)
+                section = re.sub(r'^\s*#+\s*', '', section.strip())
 
-            clean_sections.append(section)
+                # Remove duplicate titles
+                if section in seen_titles:
+                    continue
+                seen_titles.add(section)
 
-        # Combine clean sections back into content
-        formatted_blog = "\n\n".join(clean_sections)
+                clean_sections.append(section)
 
-        # Extract structured content
-        return {
-            "title": clean_sections[0] if clean_sections else "Generated Blog Post",
-            "content": formatted_blog
-        }
+            # Combine clean sections back into content
+            formatted_blog = "\n\n".join(clean_sections)
+
+            # Extract title (look for "Title:" prefix or use first section)
+            title = None
+            for section in clean_sections:
+                if section.lower().startswith("title:"):
+                    title = section.replace("Title:", "").strip()
+                    break
+            
+            if not title:
+                title = clean_sections[0] if clean_sections else "Generated Blog Post"
+
+            return {
+                "title": title,
+                "content": formatted_blog
+            }
+        except Exception as e:
+            print(f"Error in _clean_and_format_blog_post: {str(e)}")
+            raise
+
 # Flask Application Setup
 app = Flask(__name__)
+
+# Add these configurations after app initialization
+app.config['SECRET_KEY'] = 'your-secret-key-here'  # Change this to a secure secret key
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Initialize extensions
+db = SQLAlchemy(app)
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+# Create User model
+class User(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(128))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+# Add this after the User model
+class Blog(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    video_url = db.Column(db.String(500), nullable=False)
+    language = db.Column(db.String(10), nullable=False)
+
+    user = db.relationship('User', backref=db.backref('blogs', lazy=True))
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
 @app.route('/')
 def home():
@@ -306,10 +411,57 @@ def home():
     """
     return render_template('index.html')
 
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        email = request.form.get('email')
+        password = request.form.get('password')
+
+        if User.query.filter_by(username=username).first():
+            return jsonify({'error': 'Username already exists'}), 400
+        
+        if User.query.filter_by(email=email).first():
+            return jsonify({'error': 'Email already registered'}), 400
+
+        user = User(username=username, email=email)
+        user.set_password(password)
+        
+        db.session.add(user)
+        db.session.commit()
+
+        login_user(user)
+        return jsonify({'message': 'Registration successful'})
+
+    return render_template('register.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        user = User.query.filter_by(username=username).first()
+        
+        if user and user.check_password(password):
+            login_user(user)
+            return jsonify({'message': 'Login successful'})
+        
+        return jsonify({'error': 'Invalid username or password'}), 401
+
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('home'))
+
 @app.route('/generate', methods=['POST'])
+@login_required
 def generate():
     """
-    Generate blog post from YouTube video URL
+    Generate blog post from YouTube video URL and save it
     """
     video_url = request.form.get('video_url')
     target_language = request.form.get('target_language', 'en')
@@ -324,18 +476,77 @@ def generate():
         if 'error' in blog_post:
             return jsonify(blog_post), 400
         
+        # Save the blog
+        new_blog = Blog(
+            title=blog_post["title"],
+            content=blog_post["content"],
+            user_id=current_user.id,
+            video_url=video_url,
+            language=target_language
+        )
+        db.session.add(new_blog)
+        db.session.commit()
+        
         return jsonify({
             "title": blog_post["title"],
-            "content": blog_post["content"]
+            "content": blog_post["content"],
+            "id": new_blog.id
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# Add route to get user's blogs
+@app.route('/blogs')
+@login_required
+def get_blogs():
+    blogs = Blog.query.filter_by(user_id=current_user.id).order_by(Blog.created_at.desc()).all()
+    return jsonify([{
+        'id': blog.id,
+        'title': blog.title,
+        'created_at': blog.created_at.strftime('%Y-%m-%d %H:%M'),
+        'language': blog.language
+    } for blog in blogs])
+
+# Add route to get a specific blog
+@app.route('/blog/<int:blog_id>')
+@login_required
+def get_blog(blog_id):
+    blog = Blog.query.get_or_404(blog_id)
+    if blog.user_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+    return jsonify({
+        'id': blog.id,
+        'title': blog.title,
+        'content': blog.content,
+        'video_url': blog.video_url,
+        'language': blog.language,
+        'created_at': blog.created_at.strftime('%Y-%m-%d %H:%M')
+    })
+
+@app.route('/blog/<int:blog_id>', methods=['DELETE'])
+@login_required
+def delete_blog(blog_id):
+    blog = Blog.query.get_or_404(blog_id)
+    if blog.user_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    try:
+        db.session.delete(blog)
+        db.session.commit()
+        return jsonify({'message': 'Blog deleted successfully'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+# Add this after app initialization but before route definitions
+with app.app_context():
+    db.create_all()
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
 
 # Requirements to install:
-# pip install flask youtube_transcript_api google-generativeai pytube nltk 
+# pip install flask youtube_transcript_api groq pytube nltk 
 # pip install openai-whisper --upgrade
 # pip install moviepy
 # pip install torch
@@ -344,3 +555,6 @@ if __name__ == "__main__":
 # pip install setuptools-rust
 # 
 # Note: Whisper model download happens automatically on first use
+
+# Additional requirements:
+# pip install flask-sqlalchemy flask-login

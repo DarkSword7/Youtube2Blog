@@ -7,149 +7,692 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/tinymce.min.js"></script>
+    <!-- Add TinyMCE plugins -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/plugins/advlist/plugin.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/plugins/autolink/plugin.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/plugins/lists/plugin.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/plugins/link/plugin.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/plugins/image/plugin.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/plugins/charmap/plugin.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/plugins/preview/plugin.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/plugins/anchor/plugin.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/plugins/searchreplace/plugin.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/plugins/visualblocks/plugin.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/plugins/code/plugin.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/plugins/fullscreen/plugin.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/plugins/insertdatetime/plugin.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/plugins/media/plugin.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/plugins/table/plugin.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/plugins/paste/plugin.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/plugins/help/plugin.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/plugins/wordcount/plugin.min.js"></script>
     <!-- Add Lucide Icons for social media icons -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <!-- Add Inter font -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      // Configure Tailwind dark mode
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {},
+        },
+      };
+
+      // Check initial dark mode preference
+      if (
+        localStorage.theme === "dark" ||
+        (!("theme" in localStorage) &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches)
+      ) {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    </script>
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      /* Hide scrollbar for Chrome, Safari and Opera */
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      /* Hide scrollbar for IE, Edge and Firefox */
+      .no-scrollbar {
+        -ms-overflow-style: none; /* IE and Edge */
+        scrollbar-width: none; /* Firefox */
+      }
+      /* Glass morphism */
+      .glass {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+      .dark .glass {
+        background: rgba(4, 4, 4, 0.4);
+        border-color: rgba(255, 255, 255, 0.1);
+      }
+      /* Custom Scrollbar */
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background-color: rgba(156, 163, 175, 0.5);
+        border-radius: 3px;
+      }
+
+      .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+        background-color: rgba(75, 85, 99, 0.5);
+      }
+    </style>
   </head>
   <body
-    class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 min-h-screen flex flex-col"
+    class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-[#040404] dark:to-[#040404] min-h-screen flex flex-col"
   >
-    <!-- Navbar -->
-    <header class="w-full py-4 bg-white dark:bg-gray-800 shadow-md">
-      <div class="container mx-auto px-4 flex justify-between items-center">
-        <h1 class="text-2xl font-semibold text-blue-600 dark:text-blue-400">
-          YT Blog Converter
-        </h1>
-        <button
-          id="dark-mode-toggle"
-          class="bg-gray-200 dark:bg-gray-700 p-2 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition"
-        >
-          🌙
-        </button>
-      </div>
-    </header>
+    <!-- Mobile Sidebar Toggle -->
+    <button
+      id="mobile-sidebar-toggle"
+      class="lg:hidden fixed top-4 left-4 z-50 p-2 glass rounded-xl text-gray-700 dark:text-gray-200"
+      aria-label="Toggle Sidebar"
+    >
+      <i data-lucide="menu" class="w-6 h-6"></i>
+    </button>
 
-    <!-- Main Content -->
-    <div class="container mx-auto px-4 py-8 max-w-5xl flex-1">
+    <div class="flex h-screen overflow-hidden">
+      <!-- Sidebar -->
       <div
-        class="bg-white dark:bg-gray-800 shadow-lg rounded-xl overflow-hidden"
+        id="sidebar"
+        class="fixed inset-y-0 left-0 w-72 glass transform -translate-x-full lg:translate-x-0 transition-transform duration-200 ease-in-out z-30 flex flex-col backdrop-blur-md"
       >
-        <!-- Header -->
-        <div class="bg-gradient-to-r from-blue-500 to-purple-600 p-6">
-          <h2 class="text-3xl font-bold text-white text-center">
-            Convert YouTube Video to Blog
-          </h2>
-        </div>
-
-        <!-- Form Section -->
-        <form id="blog-form" class="p-6 space-y-6">
-          <div>
-            <label for="video_url" class="block text-sm font-semibold"
-              >YouTube Video URL</label
-            >
-            <input
-              type="url"
-              id="video_url"
-              name="video_url"
-              required
-              class="w-full mt-1 p-2 rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-900 focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter YouTube video URL"
-            />
-          </div>
-          <div>
-            <label for="target_language" class="block text-sm font-semibold"
-              >Target Language</label
-            >
-            <select
-              id="target_language"
-              name="target_language"
-              class="w-full mt-1 p-2 rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-900 focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="en">English</option>
-              <option value="hi">Hindi</option>
-              <option value="es">Spanish</option>
-              <option value="fr">French</option>
-              <option value="de">German</option>
-              <option value="it">Italian</option>
-            </select>
-          </div>
-          <button
-            type="submit"
-            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
-          >
-            Generate Blog Post
-          </button>
-        </form>
-      </div>
-
-      <!-- Loading State -->
-      <div id="loading" class="hidden mt-6 text-center">
+        <!-- User Profile -->
         <div
-          class="animate-spin inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full"
-        ></div>
-        <p class="mt-2 text-gray-600 dark:text-gray-400">
-          Generating blog post...
-        </p>
-      </div>
-
-      <!-- Output Section -->
-      <div
-        id="blog-output"
-        class="hidden mt-6 bg-white dark:bg-gray-800 shadow-lg rounded-xl overflow-hidden"
-      >
-        <div class="p-6">
-          <!-- Title and Actions Section -->
-          <div
-            class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6"
-          >
-            <h3 id="blog-title" class="text-2xl font-bold"></h3>
-            <div class="flex flex-wrap gap-2">
-              <!-- Share Buttons -->
-
-                <!-- WhatsApp Share -->
-                <button
-                  onclick="shareOnWhatsApp()"
-                  class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition flex items-center gap-2"
-                  title="Share on WhatsApp"
-                >
-                  <i data-lucide="message-circle" class="w-4 h-4"></i>
-                  <span class="hidden sm:inline">WhatsApp</span>
-                </button>
-
-                <!-- Copy Button -->
-                <button
-                  id="copy-button"
-                  class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition flex items-center gap-2"
-                >
-                  <i data-lucide="copy" class="w-4 h-4"></i>
-                  <span class="hidden sm:inline">Copy</span>
-                </button>
+          class="p-6 border-b border-gray-200/10 dark:border-gray-800/10 flex-shrink-0"
+        >
+          {% if current_user.is_authenticated %}
+          <div class="mt-6 flex items-center gap-3">
+            <div
+              class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold"
+            >
+              {{ current_user.username[0].upper() }}
+            </div>
+            <div>
+              <div class="font-medium text-gray-900 dark:text-gray-100">
+                {{ current_user.username }}
+              </div>
+              <div class="text-sm text-gray-500 dark:text-gray-400">
+                {{ current_user.email }}
               </div>
             </div>
           </div>
+          {% endif %}
+        </div>
 
-          <!-- Rich Text Editor Container -->
-          <div class="bg-white rounded-lg overflow-hidden">
-            <textarea id="blog-editor" class="w-full"></textarea>
-          </div>
+        <!-- Blog History -->
+        <div class="flex-1 overflow-y-auto custom-scrollbar">
+          <div class="p-6">
+            <h2
+              class="text-sm font-medium text-gray-400 uppercase tracking-wider mb-4"
+            >
+              Blog History
+            </h2>
+            <!-- Loading State -->
+            <div id="blog-history-loading" class="text-center py-4">
+              <div
+                class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"
+              ></div>
+            </div>
+            <!-- Blog History List -->
+            <div id="blog-history" class="space-y-3">
+              <!-- Blog items will be inserted here -->
+            </div>
+            <!-- Empty State -->
+            <div
+              id="blog-history-empty"
+              class="hidden text-center py-4 text-gray-500 dark:text-gray-400"
+            >
+              No blogs yet
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Error Message -->
-      <div
-        id="error-output"
-        class="hidden mt-6 bg-red-50 border-l-4 border-red-500 text-red-800 p-4 rounded-lg"
-      >
-        <strong>Error:</strong>
-        <span id="error-message"></span>
-      </div>
+      <!-- Main Content -->
+      <main class="flex-1 overflow-y-auto">
+        <!-- Navbar -->
+        <header
+          class="w-full py-4 glass backdrop-blur-md shadow-md sticky top-0 z-30"
+        >
+          <div class="container mx-auto px-4 flex justify-between items-center">
+            <div class="flex items-center">
+              {% include 'components/logo.html' %}
+            </div>
+            <div class="flex items-center gap-4">
+              <!-- Dark Mode Toggle -->
+              <button
+                id="dark-mode-toggle"
+                class="p-2 rounded-lg hover:bg-gray-100/10 dark:hover:bg-gray-800/50 text-gray-700 dark:text-gray-300"
+                aria-label="Toggle Dark Mode"
+              >
+                <i data-lucide="sun" class="w-5 h-5 hidden dark:block"></i>
+                <i data-lucide="moon" class="w-5 h-5 block dark:hidden"></i>
+              </button>
+              {% if current_user.is_authenticated %}
+              <span class="text-gray-700 dark:text-gray-200"
+                >Welcome, {{ current_user.username }}</span
+              >
+              <a
+                href="{{ url_for('logout') }}"
+                class="text-red-500 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                >Logout</a
+              >
+              {% else %}
+              <div class="flex items-center gap-3">
+                <a
+                  href="{{ url_for('login') }}"
+                  class="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white hover:opacity-90 transition-opacity"
+                >
+                  Login
+                </a>
+                <a
+                  href="{{ url_for('register') }}"
+                  class="px-4 py-2 rounded-lg glass hover:bg-white/10 dark:hover:bg-black/10 transition-colors text-gray-700 dark:text-gray-300"
+                >
+                  Register
+                </a>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="container mx-auto px-4 py-8 max-w-4xl">
+          {% if current_user.is_authenticated %}
+          <div class="glass rounded-2xl overflow-hidden">
+            <!-- Header -->
+            <div class="p-8 text-center">
+              <h2
+                class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"
+              >
+                Transform Video to Blog
+              </h2>
+              <p class="mt-2 text-gray-600 dark:text-gray-400">
+                Convert any YouTube video into a well-structured blog post
+              </p>
+            </div>
+
+            <!-- Form Section -->
+            <form id="blog-form" class="p-8 space-y-6">
+              <div>
+                <label
+                  for="video_url"
+                  class="block text-sm font-semibold text-gray-700 dark:text-gray-200"
+                  >YouTube Video URL</label
+                >
+                <input
+                  type="url"
+                  id="video_url"
+                  name="video_url"
+                  required
+                  class="w-full mt-1 p-2 rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-[#040404] text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter YouTube video URL"
+                />
+              </div>
+              <div>
+                <label
+                  for="target_language"
+                  class="block text-sm font-semibold text-gray-700 dark:text-gray-200"
+                  >Target Language</label
+                >
+                <select
+                  id="target_language"
+                  name="target_language"
+                  class="w-full mt-1 p-2 rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-[#040404] text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="en">English</option>
+                  <option value="hi">Hindi</option>
+                  <option value="es">Spanish</option>
+                  <option value="fr">French</option>
+                  <option value="de">German</option>
+                  <option value="it">Italian</option>
+                </select>
+              </div>
+              <button
+                type="submit"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
+              >
+                Generate Blog Post
+              </button>
+            </form>
+          </div>
+
+          <!-- Loading State -->
+          <div id="loading" class="hidden mt-6 text-center">
+            <div
+              class="animate-spin inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full"
+            ></div>
+            <p class="mt-2 text-gray-600 dark:text-gray-400">
+              Generating blog post...
+            </p>
+          </div>
+
+          <!-- Output Section -->
+          <div
+            id="blog-output"
+            class="hidden mt-6 glass shadow-lg rounded-xl overflow-hidden"
+          >
+            <div class="p-6">
+              <!-- Title and Actions Section -->
+              <div
+                class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6"
+              >
+                <h1
+                  class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4"
+                  id="blog-title"
+                ></h1>
+                <div class="flex flex-wrap gap-2">
+                  <!-- Share Buttons -->
+
+                  <!-- WhatsApp Share -->
+                  <button
+                    onclick="shareOnWhatsApp()"
+                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition flex items-center gap-2"
+                    title="Share on WhatsApp"
+                  >
+                    <i data-lucide="message-circle" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">WhatsApp</span>
+                  </button>
+
+                  <!-- Copy Button -->
+                  <button
+                    id="copy-button"
+                    class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition flex items-center gap-2"
+                  >
+                    <i data-lucide="copy" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Copy</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Rich Text Editor Container -->
+            <div class="bg-white rounded-lg overflow-hidden">
+              <textarea id="blog-editor" class="w-full"></textarea>
+            </div>
+          </div>
+          {% else %}
+          <!-- Guest Welcome Screen -->
+          <div class="text-center space-y-6">
+            <h1
+              class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"
+            >
+              Welcome to Videa
+            </h1>
+            <p class="text-xl text-gray-600 dark:text-gray-400">
+              Transform your YouTube videos into well-structured blog posts
+            </p>
+            <div class="flex justify-center gap-4">
+              <a
+                href="{{ url_for('login') }}"
+                class="px-6 py-3 rounded-lg bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white hover:opacity-90 transition-opacity"
+              >
+                Get Started
+              </a>
+              <a
+                href="{{ url_for('register') }}"
+                class="px-6 py-3 rounded-lg glass hover:bg-white/10 dark:hover:bg-black/10 transition-colors text-gray-700 dark:text-gray-300"
+              >
+                Create Account
+              </a>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Error Message -->
+        <div
+          id="error-output"
+          class="hidden mt-6 bg-red-50 border-l-4 border-red-500 text-red-800 p-4 rounded-lg"
+        >
+          <strong>Error:</strong>
+          <span id="error-message"></span>
+        </div>
+      </main>
     </div>
 
     <!-- JavaScript -->
     <script>
       // Initialize Lucide icons
       lucide.createIcons();
+
+      // Mobile Sidebar Toggle
+      document
+        .getElementById("mobile-sidebar-toggle")
+        ?.addEventListener("click", () => {
+          const sidebar = document.getElementById("sidebar");
+          if (sidebar.classList.contains("-translate-x-full")) {
+            sidebar.classList.remove("-translate-x-full");
+          } else {
+            sidebar.classList.add("-translate-x-full");
+          }
+        });
+
+      // Close sidebar when clicking outside on mobile
+      document.addEventListener("click", (e) => {
+        const sidebar = document.getElementById("sidebar");
+        const mobileToggle = document.getElementById("mobile-sidebar-toggle");
+
+        if (
+          window.innerWidth < 1024 && // Only on mobile
+          !sidebar.contains(e.target) && // Click not in sidebar
+          !mobileToggle.contains(e.target) && // Click not on toggle button
+          !sidebar.classList.contains("-translate-x-full")
+        ) {
+          // Sidebar is open
+          sidebar.classList.add("-translate-x-full");
+        }
+      });
+
+      // Load blog history
+      async function loadBlogHistory() {
+        // Check if elements exist before accessing them
+        const historyContainer = document.getElementById("blog-history");
+        const loadingEl = document.getElementById("blog-history-loading");
+        const emptyEl = document.getElementById("blog-history-empty");
+
+        if (!historyContainer || !loadingEl || !emptyEl) {
+          console.log("Blog history elements not found");
+          return;
+        }
+
+        try {
+          const response = await fetch("/blogs");
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          const blogs = await response.json();
+
+          // Hide loading state
+          loadingEl.classList.add("hidden");
+
+          if (blogs.length === 0) {
+            emptyEl.classList.remove("hidden");
+            return;
+          }
+
+          // Create blog history items
+          const blogItems = blogs
+            .map(
+              (blog) => `
+            <div class="group relative">
+              <button 
+                onclick="loadBlog(${blog.id})"
+                class="w-full text-left p-3 pr-12 rounded-lg hover:bg-gray-100/10 dark:hover:bg-gray-800/50 transition"
+              >
+                <h3 class="font-medium truncate text-gray-700 dark:text-gray-200 group-hover:text-blue-500 dark:group-hover:text-blue-400">
+                  ${blog.title.replace(/\*\*/g, "")}
+                </h3>
+                <div class="flex items-center gap-2 mt-1">
+                  <span class="text-xs px-2 py-1 rounded-full bg-gray-200/50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400">
+                    ${blog.language.toUpperCase()}
+                  </span>
+                  <span class="text-sm text-gray-500 dark:text-gray-400">
+                    ${new Date(blog.created_at).toLocaleDateString()}
+                  </span>
+                </div>
+              </button>
+              <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
+                <button
+                  onclick="deleteBlog(${blog.id}, event)"
+                  class="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 dark:bg-red-500/20 dark:hover:bg-red-500/30 transition-all duration-200"
+                  title="Delete blog"
+                >
+                  <i data-lucide="trash-2" class="w-4 h-4 text-red-600 dark:text-red-500"></i>
+                </button>
+              </div>
+            </div>
+          `
+            )
+            .join("");
+
+          // Insert blog items
+          historyContainer.innerHTML = blogItems;
+          // Reinitialize Lucide icons
+          lucide.createIcons();
+        } catch (error) {
+          console.error("Error loading blog history:", error);
+          // Hide loading state
+          loadingEl.classList.add("hidden");
+          // Show error message
+          historyContainer.innerHTML = `
+            <div class="text-center py-4">
+              <p class="text-red-500 dark:text-red-400 mb-2">
+                Failed to load blogs. Please try again.
+              </p>
+              <button 
+                onclick="loadBlogHistory()"
+                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+              >
+                Retry
+              </button>
+            </div>
+          `;
+        }
+      }
+
+      // Load blog history on page load if user is authenticated
+      if (document.getElementById("blog-history")) {
+        loadBlogHistory();
+      }
+
+      // Update blog history after generating new blog
+      document
+        .getElementById("blog-form")
+        ?.addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          document.getElementById("loading").classList.remove("hidden");
+          document.getElementById("blog-output").classList.add("hidden");
+          document.getElementById("error-output").classList.add("hidden");
+
+          const formData = new FormData(e.target);
+
+          try {
+            const response = await fetch("/generate", {
+              method: "POST",
+              body: formData,
+            });
+
+            const data = await response.json();
+
+            document.getElementById("loading").classList.add("hidden");
+
+            if (data.error) {
+              document
+                .getElementById("error-output")
+                .classList.remove("hidden");
+              document.getElementById("error-message").textContent = data.error;
+              return;
+            }
+
+            // Clean the title by removing markdown
+            const cleanTitle = data.title.replace(/\*\*/g, "");
+            document.getElementById("blog-title").textContent = cleanTitle;
+
+            // Initialize TinyMCE if it doesn't exist
+            if (!tinymce.get("blog-editor")) {
+              await tinymce.init({
+                selector: "#blog-editor",
+                height: 500,
+                menubar: true,
+                plugins:
+                  "advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table paste help wordcount",
+                toolbar:
+                  "undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help",
+                setup: function (editor) {
+                  editor.on("init", function () {
+                    const updateTheme = () => {
+                      const isDark =
+                        document.documentElement.classList.contains("dark");
+                      const styleContent = `
+                        body {
+                          font-family: 'Inter', sans-serif;
+                          font-size: 16px;
+                          line-height: 1.6;
+                          padding: 1rem;
+                          background-color: ${
+                            isDark ? "#040404" : "white"
+                          } !important;
+                          color: ${
+                            isDark ? "rgb(229 231 235)" : "rgb(31 41 55)"
+                          };
+                        }
+                        /* Override TinyMCE dark theme background */
+                        .tox-edit-area__iframe {
+                          background: ${
+                            isDark ? "#040404" : "white"
+                          } !important;
+                        }
+                        .tox.tox-tinymce {
+                          border: 1px solid rgba(255, 255, 255, 0.1);
+                          background: ${
+                            isDark ? "#040404" : "white"
+                          } !important;
+                        }
+                        .tox .tox-toolbar,
+                        .tox .tox-toolbar__overflow,
+                        .tox .tox-toolbar__primary,
+                        .tox .tox-menubar {
+                          background: ${
+                            isDark ? "#040404" : "white"
+                          } !important;
+                          border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+                        }
+                        .tox .tox-tbtn {
+                          color: ${
+                            isDark ? "rgb(229 231 235)" : "rgb(31 41 55)"
+                          } !important;
+                        }
+                        .tox .tox-tbtn:hover {
+                          background: rgba(255, 255, 255, 0.1) !important;
+                        }
+                        .tox .tox-statusbar {
+                          background: ${
+                            isDark ? "#040404" : "white"
+                          } !important;
+                          border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+                          color: ${
+                            isDark ? "rgb(229 231 235)" : "rgb(31 41 55)"
+                          } !important;
+                        }
+                        h1 {
+                          font-size: 1.75rem;
+                          font-weight: 600;
+                          margin-bottom: 1rem;
+                          color: ${
+                            isDark ? "rgb(229 231 235)" : "rgb(31 41 55)"
+                          };
+                        }
+                        h2 {
+                          font-size: 1.5rem;
+                          font-weight: 600;
+                          margin-top: 1.5rem;
+                          margin-bottom: 1rem;
+                          color: ${
+                            isDark ? "rgb(229 231 235)" : "rgb(31 41 55)"
+                          };
+                        }
+                        /* Style for blog title */
+                        .blog-title {
+                          font-size: 1.75rem !important;
+                          font-weight: 600 !important;
+                          margin-bottom: 1.5rem !important;
+                          line-height: 1.3 !important;
+                        }
+                        /* Style for sections */
+                        .section {
+                          margin-top: 2rem !important;
+                          margin-bottom: 1rem !important;
+                        }
+                        /* Style for paragraphs */
+                        p {
+                          margin-bottom: 1rem !important;
+                          line-height: 1.75 !important;
+                        }
+                      `;
+                      editor.dom.addStyle(styleContent);
+                    };
+
+                    // Update theme initially
+                    updateTheme();
+
+                    // Listen for dark mode changes
+                    const observer = new MutationObserver(() => {
+                      updateTheme();
+                    });
+                    observer.observe(document.documentElement, {
+                      attributes: true,
+                      attributeFilter: ["class"],
+                    });
+                  });
+                },
+                skin: document.documentElement.classList.contains("dark")
+                  ? "oxide-dark"
+                  : "oxide",
+                content_css: document.documentElement.classList.contains("dark")
+                  ? "dark"
+                  : "default",
+              });
+            }
+
+            // Clean the content by converting markdown to HTML
+            let cleanContent = marked.parse(data.content);
+
+            // Add title class to the main heading
+            cleanContent = cleanContent.replace(
+              /<h1>/g,
+              '<h1 class="blog-title">'
+            );
+
+            // Add section class to subheadings
+            cleanContent = cleanContent.replace(
+              /<h2>/g,
+              '<h2 class="section">'
+            );
+
+            const editor = tinymce.get("blog-editor");
+            if (editor) {
+              editor.setContent(cleanContent);
+            } else {
+              console.error("TinyMCE editor not initialized");
+            }
+
+            // Show the blog output section if it exists
+            const blogOutput = document.getElementById("blog-output");
+            if (blogOutput) {
+              blogOutput.classList.remove("hidden");
+            }
+
+            // Refresh blog history after generating new blog
+            await loadBlogHistory();
+          } catch (error) {
+            console.error("Error:", error);
+            document.getElementById("loading").classList.add("hidden");
+            document.getElementById("error-output").classList.remove("hidden");
+            document.getElementById("error-message").textContent =
+              error.message || "An unexpected error occurred.";
+          }
+        });
 
       // Social Sharing Functions
       function getShareContent() {
@@ -168,10 +711,9 @@
       }
 
       // Toast Notification
-      function showToast(message) {
+      function showToast(message, type = "default") {
         const toast = document.createElement("div");
-        toast.className =
-          "fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg transition-opacity duration-300";
+        toast.className = `fixed bottom-4 right-4 bg-${type}-500 text-white px-6 py-3 rounded-lg shadow-lg transition-opacity duration-300`;
         toast.textContent = message;
         document.body.appendChild(toast);
 
@@ -180,127 +722,246 @@
           setTimeout(() => toast.remove(), 300);
         }, 2000);
       }
-      // Initialize TinyMCE
-      tinymce.init({
-        selector: "#blog-editor",
-        height: 500,
-        menubar: true,
-        plugins: [
-          "advlist",
-          "autolink",
-          "lists",
-          "link",
-          "image",
-          "charmap",
-          "preview",
-          "anchor",
-          "searchreplace",
-          "visualblocks",
-          "code",
-          "fullscreen",
-          "insertdatetime",
-          "media",
-          "table",
-          "help",
-          "wordcount",
-        ],
-        toolbar:
-          "undo redo | blocks | " +
-          "bold italic backcolor | alignleft aligncenter " +
-          "alignright alignjustify | bullist numlist outdent indent | " +
-          "removeformat | help",
-        content_style: "body { font-family:Arial,sans-serif; font-size:16px }",
-      });
 
       // Dark Mode Toggle
-      const toggleDarkMode = document.getElementById("dark-mode-toggle");
+      document
+        .getElementById("dark-mode-toggle")
+        .addEventListener("click", () => {
+          if (document.documentElement.classList.contains("dark")) {
+            document.documentElement.classList.remove("dark");
+            localStorage.theme = "light";
+          } else {
+            document.documentElement.classList.add("dark");
+            localStorage.theme = "dark";
+          }
+          // Remove and reinitialize TinyMCE to update its theme
+          tinymce.remove();
+          tinymce.init({
+            selector: "#blog-editor",
+            height: 500,
+            menubar: true,
+            plugins:
+              "advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table paste help wordcount",
+            toolbar:
+              "undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help",
+            setup: function (editor) {
+              editor.on("init", function () {
+                const updateTheme = () => {
+                  const isDark =
+                    document.documentElement.classList.contains("dark");
+                  const styleContent = `
+                    body {
+                      font-family: 'Inter', sans-serif;
+                      font-size: 16px;
+                      line-height: 1.6;
+                      padding: 1rem;
+                      background-color: ${
+                        isDark ? "#040404" : "white"
+                      } !important;
+                      color: ${isDark ? "rgb(229 231 235)" : "rgb(31 41 55)"};
+                    }
+                    /* Override TinyMCE dark theme background */
+                    .tox-edit-area__iframe {
+                      background: ${isDark ? "#040404" : "white"} !important;
+                    }
+                    .tox.tox-tinymce {
+                      border: 1px solid rgba(255, 255, 255, 0.1);
+                      background: ${isDark ? "#040404" : "white"} !important;
+                    }
+                    .tox .tox-toolbar,
+                    .tox .tox-toolbar__overflow,
+                    .tox .tox-toolbar__primary,
+                    .tox .tox-menubar {
+                      background: ${isDark ? "#040404" : "white"} !important;
+                      border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+                    }
+                    .tox .tox-tbtn {
+                      color: ${
+                        isDark ? "rgb(229 231 235)" : "rgb(31 41 55)"
+                      } !important;
+                    }
+                    .tox .tox-tbtn:hover {
+                      background: rgba(255, 255, 255, 0.1) !important;
+                    }
+                    .tox .tox-statusbar {
+                      background: ${isDark ? "#040404" : "white"} !important;
+                      border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+                      color: ${
+                        isDark ? "rgb(229 231 235)" : "rgb(31 41 55)"
+                      } !important;
+                    }
+                    h1 {
+                      font-size: 1.75rem;
+                      font-weight: 600;
+                      margin-bottom: 1rem;
+                      color: ${isDark ? "rgb(229 231 235)" : "rgb(31 41 55)"};
+                    }
+                    h2 {
+                      font-size: 1.5rem;
+                      font-weight: 600;
+                      margin-top: 1.5rem;
+                      margin-bottom: 1rem;
+                      color: ${isDark ? "rgb(229 231 235)" : "rgb(31 41 55)"};
+                    }
+                    /* Style for blog title */
+                    .blog-title {
+                      font-size: 1.75rem !important;
+                      font-weight: 600 !important;
+                      margin-bottom: 1.5rem !important;
+                      line-height: 1.3 !important;
+                    }
+                    /* Style for sections */
+                    .section {
+                      margin-top: 2rem !important;
+                      margin-bottom: 1rem !important;
+                    }
+                    /* Style for paragraphs */
+                    p {
+                      margin-bottom: 1rem !important;
+                      line-height: 1.75 !important;
+                    }
+                  `;
+                  editor.dom.addStyle(styleContent);
+                };
 
-      if (localStorage.getItem("theme") === "dark") {
-        document.documentElement.classList.add("dark");
-        toggleDarkMode.textContent = "☀️";
-      } else {
-        toggleDarkMode.textContent = "🌙";
+                // Update theme initially
+                updateTheme();
+
+                // Listen for dark mode changes
+                const observer = new MutationObserver(() => {
+                  updateTheme();
+                });
+                observer.observe(document.documentElement, {
+                  attributes: true,
+                  attributeFilter: ["class"],
+                });
+              });
+            },
+            skin: document.documentElement.classList.contains("dark")
+              ? "oxide-dark"
+              : "oxide",
+            content_css: document.documentElement.classList.contains("dark")
+              ? "dark"
+              : "default",
+          });
+        });
+
+      async function loadBlog(blogId) {
+        try {
+          const response = await fetch(`/blog/${blogId}`);
+          const blog = await response.json();
+
+          // Close sidebar on mobile
+          if (window.innerWidth < 1024) {
+            const sidebar = document.getElementById("sidebar");
+            sidebar.classList.add("-translate-x-full");
+          }
+
+          const blogOutput = document.getElementById("blog-output");
+          if (!blogOutput) {
+            console.error("Blog output element not found");
+            return;
+          }
+
+          // Add loading animation
+          blogOutput.style.opacity = "0";
+
+          // Update content
+          setTimeout(async () => {
+            document.getElementById("video_url").value = blog.video_url;
+            document.getElementById("target_language").value = blog.language;
+            // Clean the title by removing markdown
+            const cleanTitle = blog.title.replace(/\*\*/g, "");
+            document.getElementById("blog-title").textContent = cleanTitle;
+
+            // Remove and reinitialize TinyMCE with current theme
+            tinymce.remove();
+            await tinymce.init({
+              selector: "#blog-editor",
+              height: 500,
+              menubar: true,
+              plugins:
+                "advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table paste help wordcount",
+              toolbar:
+                "undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help",
+              skin: document.documentElement.classList.contains("dark")
+                ? "oxide-dark"
+                : "oxide",
+              content_css: document.documentElement.classList.contains("dark")
+                ? "dark"
+                : "default",
+            });
+
+            // Clean the content by converting markdown to HTML
+            let cleanContent = marked.parse(blog.content);
+
+            // Add title class to the main heading
+            cleanContent = cleanContent.replace(
+              /<h1>/g,
+              '<h1 class="blog-title">'
+            );
+
+            // Add section class to subheadings
+            cleanContent = cleanContent.replace(
+              /<h2>/g,
+              '<h2 class="section">'
+            );
+
+            tinymce.get("blog-editor").setContent(cleanContent);
+
+            // Show with fade in
+            blogOutput.style.opacity = "1";
+            blogOutput.classList.remove("hidden");
+
+            // On mobile, close sidebar after selection
+            if (window.innerWidth < 1024) {
+              document
+                .getElementById("sidebar")
+                .classList.add("-translate-x-full");
+            }
+          }, 100);
+        } catch (error) {
+          console.error("Error loading blog:", error);
+          showToast("Error loading blog. Please try again later.", "error");
+        }
       }
 
-      toggleDarkMode.addEventListener("click", () => {
-        document.documentElement.classList.toggle("dark");
-        const isDark = document.documentElement.classList.contains("dark");
-        localStorage.setItem("theme", isDark ? "dark" : "light");
-        toggleDarkMode.textContent = isDark ? "☀️" : "🌙";
-      });
+      // Delete blog function
+      async function deleteBlog(blogId, event) {
+        event.stopPropagation();
 
-      // Enhanced Copy to Clipboard Functionality
-      document
-        .getElementById("copy-button")
-        .addEventListener("click", async () => {
-          try {
-            const { title, plainContent } = getShareContent();
-            const textContent = `${title}\n\n${plainContent}`;
+        const confirmDelete = confirm(
+          "Are you sure you want to delete this blog? This action cannot be undone."
+        );
 
-            await navigator.clipboard.writeText(textContent);
-            showToast("Copied to clipboard!");
+        if (!confirmDelete) {
+          return;
+        }
 
-            const copyButton = document.getElementById("copy-button");
-            const originalContent = copyButton.innerHTML;
-            copyButton.innerHTML =
-              '<i data-lucide="check" class="w-4 h-4"></i><span class="hidden sm:inline">Copied!</span>';
-            lucide.createIcons();
+        try {
+          const response = await fetch(`/blog/${blogId}`, {
+            method: "DELETE",
+          });
 
-            setTimeout(() => {
-              copyButton.innerHTML = originalContent;
-              lucide.createIcons();
-            }, 2000);
-          } catch (err) {
-            console.error("Failed to copy:", err);
-            showToast("Failed to copy to clipboard");
+          if (!response.ok) {
+            throw new Error("Failed to delete blog");
           }
-        });
 
-      // Form Submission
-      document
-        .getElementById("blog-form")
-        .addEventListener("submit", function (e) {
-          e.preventDefault();
+          // Refresh blog history
+          await loadBlogHistory();
+          showToast("Blog deleted successfully", "success");
 
-          document.getElementById("loading").classList.remove("hidden");
-          document.getElementById("blog-output").classList.add("hidden");
-          document.getElementById("error-output").classList.add("hidden");
-
-          const formData = new FormData(this);
-
-          fetch("/generate", {
-            method: "POST",
-            body: formData,
-          })
-            .then((response) => response.json())
-            .then((data) => {
-              document.getElementById("loading").classList.add("hidden");
-
-              if (data.error) {
-                document
-                  .getElementById("error-output")
-                  .classList.remove("hidden");
-                document.getElementById("error-message").textContent =
-                  data.error;
-                return;
-              }
-
-              document.getElementById("blog-title").textContent =
-                data.title || "Generated Blog Post";
-              tinymce
-                .get("blog-editor")
-                .setContent(marked.parse(data.content || ""));
-              document.getElementById("blog-output").classList.remove("hidden");
-            })
-            .catch(() => {
-              document.getElementById("loading").classList.add("hidden");
-              document
-                .getElementById("error-output")
-                .classList.remove("hidden");
-              document.getElementById("error-message").textContent =
-                "An unexpected error occurred.";
-            });
-        });
+          // If the deleted blog is currently displayed, clear the editor
+          const currentBlogId =
+            document.getElementById("blog-output").dataset.blogId;
+          if (currentBlogId === blogId.toString()) {
+            document.getElementById("blog-output").classList.add("hidden");
+          }
+        } catch (error) {
+          console.error("Error deleting blog:", error);
+          showToast("Error deleting blog", "error");
+        }
+      }
     </script>
   </body>
 </html>
