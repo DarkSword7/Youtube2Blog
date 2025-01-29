@@ -24,3 +24,12 @@ setuptools-rust
 
 # Additional dependencies for text processing
 google.generativeai
+
+# New additions from the code block
+flask-sqlalchemy==3.1.1
+flask-login==0.6.3
+groq==0.4.2
+pytube==15.0.0
+yt-dlp==2024.3.10
+openai-whisper==20231117
+Werkzeug==3.0.1
